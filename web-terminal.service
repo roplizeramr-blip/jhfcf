@@ -6,7 +6,7 @@ Wants=network.target
 [Service]
 Type=simple
 EnvironmentFile=/run/ttyd.env
-ExecStart=/bin/sh -c 'exec /usr/local/bin/ttyd -p 3000 -i 0.0.0.0 -c "$TTTYD_CREDENTIALS" -W /bin/sh'
+ExecStart=/bin/sh -c 'exec /usr/local/bin/ttyd -p 3000 -i 0.0.0.0 -c "$TTYD_CREDENTIALS" -W /bin/sh'
 Restart=always
 RestartSec=3
 
