@@ -20,7 +20,7 @@ fi
 
 install -d -m 0755 /run
 umask 077
-printf 'TTTYD_CREDENTIALS=%s:%s\n' "$TTYD_USER" "$TTYD_PASSWORD" > /run/ttyd.env
+printf 'TTYD_CREDENTIALS=%s:%s\n' "$TTYD_USER" "$TTYD_PASSWORD" > /run/ttyd.env
 chmod 0600 /run/ttyd.env
 
 exec /lib/systemd/systemd
