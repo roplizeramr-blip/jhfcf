@@ -19,7 +19,8 @@ RUN apt-get update \
 COPY web-terminal.service /etc/systemd/system/web-terminal.service
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 0755 /usr/local/bin/entrypoint.sh \
-    && systemctl enable web-terminal.service
+    && mkdir -p /etc/systemd/system/multi-user.target.wants \
+    && ln -sf /etc/systemd/system/web-terminal.service /etc/systemd/system/multi-user.target.wants/web-terminal.service
 
 EXPOSE 3000
 STOPSIGNAL SIGRTMIN+3
