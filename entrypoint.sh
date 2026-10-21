@@ -4,14 +4,19 @@ set -e
 mkdir -p /home/kasm_user/.vnc
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 2>/dev/null || true
 
+if [ ! -f /home/kasm_user/.kasmpasswd ]; then
+    printf "cranl1234\ncranl1234\n" | kasmvncpasswd -u kasm_user -r -w -o
+fi
+
+chmod +x /home/kasm_user/.vnc/xstartup
+
 vncserver :1 \
   -geometry 1280x720 \
   -depth 24 \
   -interface 0.0.0.0 \
   -websocketPort 3000 \
   -httpd /usr/share/kasmvnc/www \
-  -sslOnly 0 \
-  -select-de openbox
+  -sslOnly 0
 
 sleep 2
 

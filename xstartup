@@ -1,4 +1,6 @@
 #!/bin/sh
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
 tint2 &
-xterm -geometry 80x24+50+50 &
+xterm -geometry 100x30+50+50 &
 exec openbox-session

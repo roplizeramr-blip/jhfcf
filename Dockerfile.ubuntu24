@@ -28,7 +28,7 @@ USER kasm_user
 WORKDIR /home/kasm_user
 
 RUN mkdir -p /home/kasm_user/.vnc /home/kasm_user/.config/openbox && \
-    (echo "cranl1234" | kasmvncpasswd -u kasm_user -f -w -r -o 2>/dev/null || echo -e "cranl1234\ncranl1234\n" | kasmvncpasswd -u kasm_user -w -r -o 2>/dev/null || true)
+    printf "cranl1234\ncranl1234\n" | kasmvncpasswd -u kasm_user -r -w -o
 
 COPY --chown=kasm_user:ssl-cert entrypoint.sh /home/kasm_user/entrypoint.sh
 COPY --chown=kasm_user:ssl-cert xstartup /home/kasm_user/.vnc/xstartup
