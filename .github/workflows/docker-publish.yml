@@ -38,5 +38,6 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          provenance: false
           tags: |
             ghcr.io/${{ github.repository }}:${{ matrix.name }}
