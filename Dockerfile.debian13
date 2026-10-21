@@ -1,0 +1,45 @@
+FROM debian:trixie-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV HOME=/home/kasm_user
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    ca-certificates \
+    sudo \
+    ssl-cert \
+    dbus-x11 \
+    openbox \
+    tint2 \
+    xterm \
+    fonts-dejavu-core \
+    net-tools \
+    procps \
+    && wget -q https://github.com/kasmtech/KasmVNC/releases/download/v1.5.0/kasmvncserver_trixie_1.5.0_amd64.deb \
+    && apt-get install -y --no-install-recommends ./kasmvncserver_trixie_1.5.0_amd64.deb \
+    && rm -f kasmvncserver_trixie_1.5.0_amd64.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -s /bin/bash -g ssl-cert kasm_user && \
+    echo "kasm_user:cranl1234" | chpasswd && \
+    echo "kasm_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER kasm_user
+WORKDIR /home/kasm_user
+
+RUN mkdir -p /home/kasm_user/.vnc /home/kasm_user/.config/openbox && \
+    (echo "cranl1234" | kasmvncpasswd -u kasm_user -f -w -r -o 2>/dev/null || echo -e "cranl1234\ncranl1234\n" | kasmvncpasswd -u kasm_user -w -r -o 2>/dev/null || true)
+
+COPY --chown=kasm_user:ssl-cert entrypoint.sh /home/kasm_user/entrypoint.sh
+COPY --chown=kasm_user:ssl-cert xstartup /home/kasm_user/.vnc/xstartup
+COPY --chown=kasm_user:ssl-cert kasmvnc.yaml /home/kasm_user/.vnc/kasmvnc.yaml
+
+USER root
+RUN chmod +x /home/kasm_user/entrypoint.sh /home/kasm_user/.vnc/xstartup && \
+    mkdir -p /etc/kasmvnc && cp /home/kasm_user/.vnc/kasmvnc.yaml /etc/kasmvnc/kasmvnc.yaml
+
+USER kasm_user
+
+EXPOSE 3000
+
+ENTRYPOINT ["/home/kasm_user/entrypoint.sh"]

@@ -1,26 +1,22 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -e
 
-# Require credentials instead of exposing a root shell without authentication.
-: "${TTYD_USER:?Set TTYD_USER in the app environment}"
-: "${TTYD_PASSWORD:?Set TTYD_PASSWORD in the app environment}"
+mkdir -p /home/kasm_user/.vnc
+rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 2>/dev/null || true
 
-# Keep the credential format simple for a systemd EnvironmentFile.
-case "$TTYD_USER$TTYD_PASSWORD" in
-  *[!A-Za-z0-9_.@%-]*)
-    echo "ERROR: TTYD_USER and TTYD_PASSWORD may contain only letters, digits, underscore, dot, @, percent, and hyphen." >&2
-    exit 1
-    ;;
-esac
+vncserver :1 \
+  -geometry 1280x720 \
+  -depth 24 \
+  -interface 0.0.0.0 \
+  -websocketPort 3000 \
+  -httpd /usr/share/kasmvnc/www \
+  -sslOnly 0 \
+  -select-de openbox
 
-if [ "${#TTYD_PASSWORD}" -lt 16 ]; then
-  echo "ERROR: TTYD_PASSWORD must be at least 16 characters." >&2
-  exit 1
+sleep 2
+
+if compgen -G "/home/kasm_user/.vnc/*.log" > /dev/null; then
+    tail -f /home/kasm_user/.vnc/*.log
+else
+    tail -f /dev/null
 fi
-
-install -d -m 0755 /run
-umask 077
-printf 'TTYD_CREDENTIALS=%s:%s\n' "$TTYD_USER" "$TTYD_PASSWORD" > /run/ttyd.env
-chmod 0600 /run/ttyd.env
-
-exec /lib/systemd/systemd

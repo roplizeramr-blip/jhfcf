@@ -1,0 +1,4 @@
+#!/bin/sh
+tint2 &
+xterm -geometry 80x24+50+50 &
+exec openbox-session
