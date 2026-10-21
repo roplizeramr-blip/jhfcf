@@ -37,7 +37,9 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          push: true
           provenance: false
+          sbom: false
+          outputs: type=image,push=true,oci-mediatypes=false
           tags: |
             ghcr.io/${{ github.repository }}:${{ matrix.name }}
+            ghcr.io/${{ github.repository }}:${{ matrix.name }}-v2
