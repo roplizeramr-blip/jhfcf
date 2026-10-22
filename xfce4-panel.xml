@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="configversion" type="int" value="2"/>
+  <property name="panels" type="array">
+    <property name="value" type="int" value="1"/>
+  </property>
+  <property name="panel-1" type="empty">
+    <property name="position" type="string" value="p=8;x=0;y=0"/>
+    <property name="length" type="uint" value="100"/>
+    <property name="position-locked" type="bool" value="true"/>
+    <property name="size" type="uint" value="38"/>
+    <property name="plugin-ids" type="array">
+      <property name="value" type="int" value="1"/>
+      <property name="value" type="int" value="2"/>
+      <property name="value" type="int" value="3"/>
+      <property name="value" type="int" value="4"/>
+      <property name="value" type="int" value="5"/>
+      <property name="value" type="int" value="6"/>
+      <property name="value" type="int" value="7"/>
+      <property name="value" type="int" value="8"/>
+      <property name="value" type="int" value="9"/>
+      <property name="value" type="int" value="10"/>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="applicationsmenu">
+      <property name="show-menu-title" type="bool" value="true"/>
+      <property name="button-title" type="string" value="Applications / التطبيقات"/>
+      <property name="show-button-title" type="bool" value="true"/>
+    </property>
+    <property name="plugin-2" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-3" type="string" value="launcher">
+      <property name="items" type="array">
+        <property name="value" type="string" value="Terminal.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-4" type="string" value="launcher">
+      <property name="items" type="array">
+        <property name="value" type="string" value="Files.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-5" type="string" value="launcher">
+      <property name="items" type="array">
+        <property name="value" type="string" value="Browser.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-6" type="string" value="launcher">
+      <property name="items" type="array">
+        <property name="value" type="string" value="Services.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-7" type="string" value="tasklist">
+      <property name="flat-buttons" type="bool" value="false"/>
+      <property name="show-labels" type="bool" value="true"/>
+      <property name="grouping" type="uint" value="1"/>
+      <property name="sort-order" type="uint" value="4"/>
+    </property>
+    <property name="plugin-8" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-9" type="string" value="clock">
+      <property name="digital-format" type="string" value="%H:%M  |  %d %b %Y"/>
+      <property name="mode" type="uint" value="2"/>
+    </property>
+    <property name="plugin-10" type="string" value="showdesktop"/>
+  </property>
+</channel>

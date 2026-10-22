@@ -34,5 +34,11 @@ sleep 2
 
 export DISPLAY=:1
 
-# Start Openbox session as foreground process
-exec openbox-session
+# Configure keyboard layout (Alt+Shift toggle)
+setxkbmap -layout us,ar -option grp:alt_shift_toggle &
+
+# Disable power manager DPMS and screensaver to prevent black screen
+xset s off -dpms 2>/dev/null || true
+
+# Start complete XFCE4 desktop session with D-Bus
+exec dbus-launch --exit-with-session startxfce4
