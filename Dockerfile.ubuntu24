@@ -3,23 +3,48 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV HOME=/home/kasm_user
 ENV DISPLAY=:1
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV LANGUAGE=en_US:en
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
+    curl \
     ca-certificates \
     sudo \
     ssl-cert \
     dbus-x11 \
-    openbox \
-    tint2 \
-    xterm \
+    xfce4-session \
+    xfwm4 \
+    xfce4-panel \
+    xfdesktop4 \
+    xfce4-terminal \
+    xfce4-settings \
+    thunar \
+    mousepad \
+    xfce4-xkb-plugin \
+    greybird-gtk-theme \
+    papirus-icon-theme \
+    fonts-hosny-amiri \
+    fonts-kacst \
+    fonts-kacst-one \
+    fonts-noto-core \
     fonts-dejavu-core \
+    libfribidi0 \
+    locales \
+    x11-xkb-utils \
+    x11-xserver-utils \
     net-tools \
     procps \
+    && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
+    && sed -i '/ar_EG.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen \
     && wget -q https://github.com/kasmtech/KasmVNC/releases/download/v1.5.0/kasmvncserver_noble_1.5.0_amd64.deb \
     && apt-get install -y --no-install-recommends ./kasmvncserver_noble_1.5.0_amd64.deb \
     && rm -f kasmvncserver_noble_1.5.0_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
+
+RUN echo 'XKBMODEL="pc105"\nXKBLAYOUT="us,ar"\nXKBVARIANT=","\nXKBOPTIONS="grp:alt_shift_toggle"' > /etc/default/keyboard
 
 RUN useradd -m -s /bin/bash -g ssl-cert kasm_user && \
     echo "kasm_user:cranl1234" | chpasswd && \
