@@ -42,4 +42,4 @@ jobs:
           outputs: type=image,push=true,oci-mediatypes=false
           tags: |
             ghcr.io/${{ github.repository }}:${{ matrix.name }}
-            ghcr.io/${{ github.repository }}:${{ matrix.name }}-v4
+            ghcr.io/${{ github.repository }}:${{ matrix.name }}-v5

@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     ssl-cert \
     dbus-x11 \
-    xfce4-session \
     xfwm4 \
     xfce4-panel \
     xfdesktop4 \
@@ -23,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     thunar \
     mousepad \
     xfce4-xkb-plugin \
+    libnotify-bin \
     greybird-gtk-theme \
     papirus-icon-theme \
     fonts-hosny-amiri \
@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfribidi0 \
     locales \
     x11-xkb-utils \
+    xkb-data \
     x11-xserver-utils \
     net-tools \
     procps \
@@ -43,6 +44,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y --no-install-recommends ./kasmvncserver_noble_1.5.0_amd64.deb \
     && rm -f kasmvncserver_noble_1.5.0_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
 
 RUN echo 'XKBMODEL="pc105"\nXKBLAYOUT="us,ar"\nXKBVARIANT=","\nXKBOPTIONS="grp:alt_shift_toggle"' > /etc/default/keyboard
 
