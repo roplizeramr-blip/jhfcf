@@ -52,14 +52,36 @@ RUN useradd -u 1000 -m -s /bin/bash -g ssl-cert kasm_user && \
     echo "kasm_user:cranl1234" | chpasswd && \
     echo "kasm_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-COPY --chown=kasm_user:ssl-cert entrypoint.sh /home/kasm_user/entrypoint.sh
+# Pre-configure user directories and desktop configs
+RUN mkdir -p /home/kasm_user/Desktop \
+             /home/kasm_user/.config/openbox \
+             /home/kasm_user/.config/tint2 \
+             /home/kasm_user/.config/pcmanfm/default \
+             /home/kasm_user/.config/gtk-3.0 \
+             /home/kasm_user/.config/xfce4/terminal
 
-USER root
-RUN chmod +x /home/kasm_user/entrypoint.sh
+COPY entrypoint.sh /home/kasm_user/entrypoint.sh
+COPY autostart /home/kasm_user/.config/openbox/autostart
+COPY tint2rc /home/kasm_user/.config/tint2/tint2rc
+COPY terminalrc /home/kasm_user/.config/xfce4/terminal/terminalrc
+COPY switch-lang.sh /home/kasm_user/switch-lang.sh
+
+RUN echo '[Settings]\ngtk-theme-name = Greybird-dark\ngtk-icon-theme-name = Papirus-Dark\ngtk-font-name = Noto Sans 10\ngtk-application-prefer-dark-theme = true' > /home/kasm_user/.config/gtk-3.0/settings.ini && \
+    echo 'gtk-theme-name="Greybird-dark"\ngtk-icon-theme-name="Papirus-Dark"\ngtk-font-name="Noto Sans 10"' > /home/kasm_user/.gtkrc-2.0 && \
+    echo '[*]\nwallpaper_mode=color\ndesktop_bg=#1a1d24\ndesktop_fg=#ffffff\ndesktop_shadow=#000000\nshow_wm_menu=1\nsort_type=0\nsort_by=0' > /home/kasm_user/.config/pcmanfm/default/desktop-items-0.conf && \
+    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Terminal (الطرفية)\nExec=xfce4-terminal\nIcon=utilities-terminal\nTerminal=false' > /home/kasm_user/Desktop/Terminal.desktop && \
+    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Files (مدير الملفات)\nExec=pcmanfm\nIcon=system-file-manager\nTerminal=false' > /home/kasm_user/Desktop/Files.desktop && \
+    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Text Editor (محرر النصوص)\nExec=mousepad\nIcon=accessories-text-editor\nTerminal=false' > /home/kasm_user/Desktop/TextEditor.desktop && \
+    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Switch Language (عربي / US)\nExec=/home/kasm_user/switch-lang.sh\nIcon=preferences-desktop-keyboard\nTerminal=false' > /home/kasm_user/Desktop/SwitchLanguage.desktop && \
+    echo "alias ar='setxkbmap -layout ar,us -option grp:alt_shift_toggle && echo Language: Arabic'" >> /home/kasm_user/.bashrc && \
+    echo "alias en='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo Language: US English'" >> /home/kasm_user/.bashrc && \
+    echo "alias us='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo Language: US English'" >> /home/kasm_user/.bashrc && \
+    chmod +x /home/kasm_user/entrypoint.sh /home/kasm_user/.config/openbox/autostart /home/kasm_user/switch-lang.sh /home/kasm_user/Desktop/*.desktop && \
+    chown -R kasm_user:ssl-cert /home/kasm_user
+
+EXPOSE 3000
 
 USER kasm_user
 WORKDIR /home/kasm_user
-
-EXPOSE 3000
 
 ENTRYPOINT ["/home/kasm_user/entrypoint.sh"]
