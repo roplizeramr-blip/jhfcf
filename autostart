@@ -1,11 +1,14 @@
-# Configure Arabic + US keyboard layout with Alt+Shift toggle
+# Configure Arabic keyboard layout with Alt+Shift toggle
 setxkbmap -layout us,ar -option grp:alt_shift_toggle &
 
-# Start desktop background & icons
-pcmanfm --desktop &
+# Disable screensaver and DPMS
+xset s off -dpms 2>/dev/null || true
 
-# Start taskbar
+# Start PCManFM desktop manager (icons & wallpaper)
+pcmanfm --desktop --profile default &
+
+# Start tint2 panel (Start menu, launchers, taskbar, clock)
 tint2 &
 
-# Start terminal with Arabic support
-(sleep 1 && xfce4-terminal --geometry=95x26+80+50) &
+# Welcome desktop notification
+(sleep 2 && notify-send -i preferences-system "نظام التشغيل جاهز" "اضغط على أيقونة 'مدير الخدمات' للتحكم في خدمات Systemd أو افتح المتصفح أو قائمة البرامج") &

@@ -14,10 +14,15 @@ border_width = 1
 background_color = #3a3f4b 100
 border_color = #61afef 100
 
+rounded = 3
+border_width = 0
+background_color = #21252b 100
+border_color = #21252b 100
+
 # Panel
 panel_monitor = all
 panel_position = bottom center horizontal
-panel_size = 100% 36
+panel_size = 100% 40
 panel_margin = 0 0
 panel_padding = 4 2 4
 panel_background_id = 1
@@ -26,6 +31,19 @@ panel_layer = normal
 strut_policy = follow_size
 panel_window_name = tint2
 disable_transparency = 1
+panel_items = LTSC
+
+# Launchers (Start menu & Quick launch)
+launcher_padding = 4 2
+launcher_background_id = 4
+launcher_icon_size = 28
+launcher_item_app = /home/kasm_user/Desktop/AppMenu.desktop
+launcher_item_app = /home/kasm_user/Desktop/Services.desktop
+launcher_item_app = /home/kasm_user/Desktop/Browser.desktop
+launcher_item_app = /home/kasm_user/Desktop/Files.desktop
+launcher_item_app = /home/kasm_user/Desktop/Terminal.desktop
+launcher_item_app = /home/kasm_user/Desktop/TextEditor.desktop
+launcher_item_app = /home/kasm_user/Desktop/SwitchLanguage.desktop
 
 # Taskbar
 taskbar_mode = single_desktop
@@ -42,7 +60,7 @@ taskbar_sort_order = none
 task_icon = 1
 task_text = 1
 task_centered = 0
-task_maximum_size = 180 30
+task_maximum_size = 180 32
 task_padding = 6 3
 task_background_id = 2
 task_active_background_id = 3
@@ -51,6 +69,13 @@ task_iconified_background_id = 2
 task_font = Noto Sans 9
 task_font_color = #abb2bf 100
 task_active_font_color = #ffffff 100
+
+# Systray
+systray_padding = 4 2
+systray_background_id = 0
+systray_sort = ascending
+systray_icon_size = 22
+systray_icon_asb = 100 0 0
 
 # Clock
 time1_format = %H:%M  |  %d %b %Y
