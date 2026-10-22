@@ -55,14 +55,13 @@ RUN useradd -u 1000 -m -s /bin/bash -g ssl-cert kasm_user && \
     echo "kasm_user:cranl1234" | chpasswd && \
     echo "kasm_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-COPY --chown=kasm_user:ssl-cert entrypoint.sh /home/kasm_user/entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+COPY start-desktop.sh /home/kasm_user/start-desktop.sh
 
-USER root
-RUN chmod +x /home/kasm_user/entrypoint.sh
-
-USER kasm_user
-WORKDIR /home/kasm_user
+RUN chmod +x /entrypoint.sh /home/kasm_user/start-desktop.sh && \
+    chown kasm_user:ssl-cert /home/kasm_user/start-desktop.sh
 
 EXPOSE 3000
 
-ENTRYPOINT ["/home/kasm_user/entrypoint.sh"]
+USER root
+ENTRYPOINT ["/entrypoint.sh"]
