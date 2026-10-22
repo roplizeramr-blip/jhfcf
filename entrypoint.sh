@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e
 
+# =========================================================
+# XDG Base Directory Setup (CRITICAL for XFCE in containers)
+# Without these, xfce4-panel/xfdesktop get NULL paths & segfault
+# =========================================================
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_RUNTIME_DIR="/tmp/runtime-kasm_user"
+export XDG_DATA_DIRS="/usr/local/share:/usr/share"
+export XDG_CONFIG_DIRS="/etc/xdg"
+
+mkdir -p "$XDG_CACHE_HOME" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
 # Remove stale X11 locks
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 2>/dev/null || true
 
@@ -30,7 +44,12 @@ Xvnc :1 \
   -disableBasicAuth &
 
 # Wait for Xvnc display to initialize
-sleep 2
+for i in $(seq 1 20); do
+  if xdpyinfo -display :1 >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.5
+done
 
 export DISPLAY=:1
 
@@ -40,39 +59,91 @@ setxkbmap -layout us,ar -option grp:alt_shift_toggle &
 # Disable screensaver and DPMS
 xset s off -dpms 2>/dev/null || true
 
-# Initialize D-Bus session if not present
+# =========================================================
+# D-Bus Session Bus (required for XFCE components)
+# =========================================================
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
   eval $(dbus-launch --sh-syntax)
   export DBUS_SESSION_BUS_ADDRESS
+  export DBUS_SESSION_BUS_PID
 fi
 
-# Ensure default panel xml exists
-if [ ! -f /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml ] && [ -f /etc/xdg/xfce4/panel/default.xml ]; then
-  mkdir -p /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml
-  cp /etc/xdg/xfce4/panel/default.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+# =========================================================
+# Ensure XFCE config directories and panel XML exist
+# =========================================================
+mkdir -p "$XDG_CONFIG_HOME/xfce4/xfconf/xfce-perchannel-xml"
+mkdir -p "$XDG_CONFIG_HOME/xfce4/panel"
+mkdir -p "$XDG_CONFIG_HOME/xfce4/desktop"
+mkdir -p "$XDG_DATA_HOME/xfce4/helpers"
+mkdir -p "$XDG_CACHE_HOME/xfce4"
+
+# Use our pre-configured panel XML (already in image via COPY)
+# If it doesn't exist, copy from default
+if [ ! -f "$XDG_CONFIG_HOME/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml" ]; then
+  if [ -f /etc/xdg/xfce4/panel/default.xml ]; then
+    cp /etc/xdg/xfce4/panel/default.xml "$XDG_CONFIG_HOME/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+  fi
 fi
 
-# Launch XFCE core components
-xfsettingsd &
-xfwm4 &
-xfce4-panel &
+# =========================================================
+# Mark .desktop files as trusted (so xfdesktop shows icons)
+# =========================================================
+if [ -d "$HOME/Desktop" ]; then
+  for f in $HOME/Desktop/*.desktop; do
+    [ -f "$f" ] && chmod +x "$f"
+    # GIO trusted flag
+    gio set "$f" metadata::trusted true 2>/dev/null || true
+  done
+fi
+
+# =========================================================
+# Launch XFCE Core Components (staggered for stability)
+# =========================================================
+echo "Starting xfsettingsd..."
+xfsettingsd --no-daemon &
+sleep 0.5
+
+echo "Starting xfwm4..."
+xfwm4 --compositor=off &
+sleep 0.5
+
+echo "Starting xfce4-panel..."
+xfce4-panel --disable-wm-check &
+sleep 1
+
+echo "Starting thunar daemon..."
 thunar --daemon &
-xfdesktop &
+sleep 0.5
 
-# Watchdog loop to monitor and keep XFCE components running
+echo "Starting xfdesktop..."
+xfdesktop --disable-wm-check &
+sleep 1
+
+echo "XFCE Desktop is ready."
+
+# =========================================================
+# Watchdog loop - restart crashed XFCE components
+# =========================================================
 while true; do
   if ! pgrep -x "Xvnc" >/dev/null 2>&1; then
     echo "Xvnc died, exiting..."
     exit 1
   fi
   if ! pgrep -x "xfwm4" >/dev/null 2>&1; then
-    xfwm4 &
+    echo "Restarting xfwm4..."
+    xfwm4 --compositor=off &
   fi
   if ! pgrep -x "xfce4-panel" >/dev/null 2>&1; then
-    xfce4-panel &
+    echo "Restarting xfce4-panel..."
+    xfce4-panel --disable-wm-check &
   fi
   if ! pgrep -x "xfdesktop" >/dev/null 2>&1; then
-    xfdesktop &
+    echo "Restarting xfdesktop..."
+    xfdesktop --disable-wm-check &
   fi
-  sleep 3
+  if ! pgrep -x "xfsettingsd" >/dev/null 2>&1; then
+    echo "Restarting xfsettingsd..."
+    xfsettingsd --no-daemon &
+  fi
+  sleep 5
 done

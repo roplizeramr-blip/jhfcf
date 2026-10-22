@@ -6,6 +6,14 @@ ENV DISPLAY=:1
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANGUAGE=en_US:en
+ENV XDG_CACHE_HOME=/home/kasm_user/.cache
+ENV XDG_DATA_HOME=/home/kasm_user/.local/share
+ENV XDG_CONFIG_HOME=/home/kasm_user/.config
+ENV XDG_RUNTIME_DIR=/tmp/runtime-kasm_user
+ENV XDG_DATA_DIRS=/usr/local/share:/usr/share
+ENV XDG_CONFIG_DIRS=/etc/xdg
+ENV NO_AT_BRIDGE=1
+ENV DBUS_SESSION_BUS_ADDRESS=autolaunch:
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
@@ -28,6 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     zenity \
     firefox-esr \
     dbus-x11 \
+    at-spi2-core \
     libnotify-bin \
     greybird-gtk-theme \
     papirus-icon-theme \
@@ -41,6 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     x11-xkb-utils \
     xkb-data \
     x11-xserver-utils \
+    xdg-utils \
     net-tools \
     procps \
     && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
@@ -76,30 +86,47 @@ RUN chmod +x /usr/local/bin/systemctl /usr/local/bin/services-manager.sh /usr/lo
     ln -sf /etc/systemd/system/sample-service.service /etc/systemd/system/multi-user.target.wants/sample-service.service && \
     ln -sf /etc/systemd/system/web-terminal.service /etc/systemd/system/multi-user.target.wants/web-terminal.service
 
-# Pre-configure user directories and XFCE desktop configs
+# Pre-configure ALL user directories (CRITICAL - prevents XDG null path crashes)
 RUN mkdir -p /home/kasm_user/Desktop \
              /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml \
-             /home/kasm_user/.config/gtk-3.0 \
+             /home/kasm_user/.config/xfce4/panel \
+             /home/kasm_user/.config/xfce4/desktop \
              /home/kasm_user/.config/xfce4/terminal \
-             /usr/share/applications
+             /home/kasm_user/.config/gtk-3.0 \
+             /home/kasm_user/.config/Thunar \
+             /home/kasm_user/.local/share/xfce4/helpers \
+             /home/kasm_user/.local/share/recently-used.xbel \
+             /home/kasm_user/.cache/xfce4 \
+             /home/kasm_user/.cache/sessions \
+             /tmp/runtime-kasm_user \
+             /usr/share/applications && \
+    chmod 700 /tmp/runtime-kasm_user && \
+    rm -rf /home/kasm_user/.local/share/recently-used.xbel && \
+    touch /home/kasm_user/.local/share/recently-used.xbel
 
 COPY entrypoint.sh /home/kasm_user/entrypoint.sh
+
+# XFCE configuration XMLs
 COPY xfce4-desktop.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
 COPY xsettings.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 COPY xfwm4.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
 COPY xfce4-power-manager.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml
+COPY xfce4-session.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml
+COPY xfce4-panel.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
 COPY terminalrc /home/kasm_user/.config/xfce4/terminal/terminalrc
 
-# Copy default panel xml to avoid first-run wizard
-RUN cp /etc/xdg/xfce4/panel/default.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null || true
+# Thunar save location fix
+RUN mkdir -p /home/kasm_user/.config/Thunar && \
+    cp /etc/xdg/Thunar/uca.xml /home/kasm_user/.config/Thunar/uca.xml 2>/dev/null || \
+    echo '<?xml version="1.0" encoding="UTF-8"?><actions></actions>' > /home/kasm_user/.config/Thunar/uca.xml
 
 # Desktop shortcuts
-RUN echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Services Manager (مدير الخدمات)\nComment=Graphical Systemd Services Manager\nExec=/usr/local/bin/services-manager.sh\nIcon=system-run\nTerminal=false\nCategories=System;Settings;' > /home/kasm_user/Desktop/Services.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Terminal (الطرفية)\nComment=Command Line Terminal\nExec=xfce4-terminal\nIcon=utilities-terminal\nTerminal=false\nCategories=System;' > /home/kasm_user/Desktop/Terminal.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Files (مدير الملفات)\nComment=Thunar File Manager\nExec=thunar\nIcon=system-file-manager\nTerminal=false\nCategories=System;' > /home/kasm_user/Desktop/Files.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Web Browser (متصفح الإنترنت)\nComment=Firefox Web Browser\nExec=firefox-esr\nIcon=firefox-esr\nTerminal=false\nCategories=Network;WebBrowser;' > /home/kasm_user/Desktop/Browser.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Text Editor (محرر النصوص)\nComment=Mousepad Text Editor\nExec=mousepad\nIcon=accessories-text-editor\nTerminal=false\nCategories=Utility;' > /home/kasm_user/Desktop/TextEditor.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Switch Language (تبديل اللغة)\nComment=Toggle Arabic and English (or press Alt+Shift)\nExec=/usr/local/bin/switch-lang.sh\nIcon=preferences-desktop-keyboard\nTerminal=false\nCategories=Utility;' > /home/kasm_user/Desktop/SwitchLanguage.desktop && \
+RUN printf '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Services Manager\nComment=Graphical Systemd Services Manager\nExec=/usr/local/bin/services-manager.sh\nIcon=system-run\nTerminal=false\nCategories=System;Settings;\n' > /home/kasm_user/Desktop/Services.desktop && \
+    printf '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Terminal\nComment=Command Line Terminal\nExec=xfce4-terminal\nIcon=utilities-terminal\nTerminal=false\nCategories=System;\n' > /home/kasm_user/Desktop/Terminal.desktop && \
+    printf '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Files\nComment=Thunar File Manager\nExec=thunar\nIcon=system-file-manager\nTerminal=false\nCategories=System;\n' > /home/kasm_user/Desktop/Files.desktop && \
+    printf '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Web Browser\nComment=Firefox Web Browser\nExec=firefox-esr\nIcon=firefox-esr\nTerminal=false\nCategories=Network;WebBrowser;\n' > /home/kasm_user/Desktop/Browser.desktop && \
+    printf '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Text Editor\nComment=Mousepad Text Editor\nExec=mousepad\nIcon=accessories-text-editor\nTerminal=false\nCategories=Utility;\n' > /home/kasm_user/Desktop/TextEditor.desktop && \
+    printf '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Switch Language\nComment=Toggle Arabic and English (or press Alt+Shift)\nExec=/usr/local/bin/switch-lang.sh\nIcon=preferences-desktop-keyboard\nTerminal=false\nCategories=Utility;\n' > /home/kasm_user/Desktop/SwitchLanguage.desktop && \
     cp /home/kasm_user/Desktop/*.desktop /usr/share/applications/ && \
     echo "alias ar='setxkbmap -layout ar,us -option grp:alt_shift_toggle && echo Language: Arabic'" >> /home/kasm_user/.bashrc && \
     echo "alias en='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo Language: US English'" >> /home/kasm_user/.bashrc && \
