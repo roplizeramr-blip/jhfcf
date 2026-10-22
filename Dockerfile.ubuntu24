@@ -26,18 +26,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ssl-cert \
     supervisor \
     python3 \
-    openbox \
-    obconf \
-    tint2 \
-    pcmanfm \
+    xfwm4 \
+    xfce4-panel \
+    xfdesktop4 \
+    xfce4-settings \
+    xfce4-session \
     xfce4-terminal \
     xfce4-appfinder \
+    xfce4-whiskermenu-plugin \
+    thunar \
     mousepad \
     zenity \
     firefox \
+    dbus-x11 \
     libnotify-bin \
     greybird-gtk-theme \
     papirus-icon-theme \
+    fonts-noto-color-emoji \
     fonts-hosny-amiri \
     fonts-kacst-one \
     fonts-noto-core \
@@ -82,38 +87,34 @@ RUN chmod +x /usr/local/bin/systemctl /usr/local/bin/services-manager.sh /usr/lo
     ln -sf /etc/systemd/system/sample-service.service /etc/systemd/system/multi-user.target.wants/sample-service.service && \
     ln -sf /etc/systemd/system/web-terminal.service /etc/systemd/system/multi-user.target.wants/web-terminal.service
 
-# Pre-configure user directories and desktop configs
+# Pre-configure user directories and XFCE desktop configs
 RUN mkdir -p /home/kasm_user/Desktop \
-             /home/kasm_user/.config/openbox \
-             /home/kasm_user/.config/tint2 \
-             /home/kasm_user/.config/pcmanfm/default \
+             /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml \
              /home/kasm_user/.config/gtk-3.0 \
              /home/kasm_user/.config/xfce4/terminal \
              /usr/share/applications
 
 COPY entrypoint.sh /home/kasm_user/entrypoint.sh
-COPY autostart /home/kasm_user/.config/openbox/autostart
-COPY menu.xml /home/kasm_user/.config/openbox/menu.xml
-COPY tint2rc /home/kasm_user/.config/tint2/tint2rc
+COPY xfce4-desktop.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+COPY xsettings.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
+COPY xfwm4.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+COPY xfce4-power-manager.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml
 COPY terminalrc /home/kasm_user/.config/xfce4/terminal/terminalrc
-COPY pcmanfm.conf /home/kasm_user/.config/pcmanfm/default/pcmanfm.conf
-COPY desktop-items-0.conf /home/kasm_user/.config/pcmanfm/default/desktop-items-0.conf
 
-RUN echo '[Settings]\ngtk-theme-name = Greybird-dark\ngtk-icon-theme-name = Papirus-Dark\ngtk-font-name = Noto Sans 10\ngtk-application-prefer-dark-theme = true' > /home/kasm_user/.config/gtk-3.0/settings.ini && \
-    echo 'gtk-theme-name="Greybird-dark"\ngtk-icon-theme-name="Papirus-Dark"\ngtk-font-name="Noto Sans 10"' > /home/kasm_user/.gtkrc-2.0
+# Copy default panel xml to avoid first-run wizard
+RUN cp /etc/xdg/xfce4/panel/default.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null || true
 
-# Desktop and menu shortcuts
-RUN echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Applications (قائمة البرامج)\nComment=Search and Launch Applications\nExec=xfce4-appfinder\nIcon=xfce4-appfinder\nTerminal=false\nCategories=System;' > /home/kasm_user/Desktop/AppMenu.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Services Manager (مدير الخدمات)\nComment=Graphical Systemd Services Manager\nExec=/usr/local/bin/services-manager.sh\nIcon=preferences-system\nTerminal=false\nCategories=System;Settings;' > /home/kasm_user/Desktop/Services.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Web Browser (متصفح الإنترنت)\nComment=Firefox Web Browser\nExec=firefox\nIcon=firefox\nTerminal=false\nCategories=Network;WebBrowser;' > /home/kasm_user/Desktop/Browser.desktop && \
-    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Files (مدير الملفات)\nComment=PCManFM File Manager\nExec=pcmanfm\nIcon=system-file-manager\nTerminal=false\nCategories=System;' > /home/kasm_user/Desktop/Files.desktop && \
+# Desktop shortcuts
+RUN echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Services Manager (مدير الخدمات)\nComment=Graphical Systemd Services Manager\nExec=/usr/local/bin/services-manager.sh\nIcon=system-run\nTerminal=false\nCategories=System;Settings;' > /home/kasm_user/Desktop/Services.desktop && \
     echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Terminal (الطرفية)\nComment=Command Line Terminal\nExec=xfce4-terminal\nIcon=utilities-terminal\nTerminal=false\nCategories=System;' > /home/kasm_user/Desktop/Terminal.desktop && \
+    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Files (مدير الملفات)\nComment=Thunar File Manager\nExec=thunar\nIcon=system-file-manager\nTerminal=false\nCategories=System;' > /home/kasm_user/Desktop/Files.desktop && \
+    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Web Browser (متصفح الإنترنت)\nComment=Firefox Web Browser\nExec=firefox\nIcon=firefox\nTerminal=false\nCategories=Network;WebBrowser;' > /home/kasm_user/Desktop/Browser.desktop && \
     echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Text Editor (محرر النصوص)\nComment=Mousepad Text Editor\nExec=mousepad\nIcon=accessories-text-editor\nTerminal=false\nCategories=Utility;' > /home/kasm_user/Desktop/TextEditor.desktop && \
     echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Switch Language (تبديل اللغة)\nComment=Toggle Arabic and English (or press Alt+Shift)\nExec=/usr/local/bin/switch-lang.sh\nIcon=preferences-desktop-keyboard\nTerminal=false\nCategories=Utility;' > /home/kasm_user/Desktop/SwitchLanguage.desktop && \
     cp /home/kasm_user/Desktop/*.desktop /usr/share/applications/ && \
     echo "alias ar='setxkbmap -layout ar,us -option grp:alt_shift_toggle && echo Language: Arabic'" >> /home/kasm_user/.bashrc && \
     echo "alias en='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo Language: US English'" >> /home/kasm_user/.bashrc && \
-    chmod +x /home/kasm_user/entrypoint.sh /home/kasm_user/.config/openbox/autostart /home/kasm_user/Desktop/*.desktop && \
+    chmod +x /home/kasm_user/entrypoint.sh /home/kasm_user/Desktop/*.desktop && \
     chown -R kasm_user:ssl-cert /home/kasm_user
 
 EXPOSE 3000

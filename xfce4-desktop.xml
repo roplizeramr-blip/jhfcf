@@ -3,12 +3,20 @@
   <property name="backdrop" type="empty">
     <property name="screen0" type="empty">
       <property name="monitor0" type="empty">
-        <property name="image-path" type="string" value=""/>
         <property name="color-style" type="int" value="0"/>
         <property name="rgba1" type="array">
           <property name="value" type="double" value="0.12"/>
-          <property name="value" type="double" value="0.14"/>
-          <property name="value" type="double" value="0.18"/>
+          <property name="value" type="double" value="0.15"/>
+          <property name="value" type="double" value="0.20"/>
+          <property name="value" type="double" value="1.0"/>
+        </property>
+      </property>
+      <property name="monitor1" type="empty">
+        <property name="color-style" type="int" value="0"/>
+        <property name="rgba1" type="array">
+          <property name="value" type="double" value="0.12"/>
+          <property name="value" type="double" value="0.15"/>
+          <property name="value" type="double" value="0.20"/>
           <property name="value" type="double" value="1.0"/>
         </property>
       </property>

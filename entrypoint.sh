@@ -34,5 +34,45 @@ sleep 2
 
 export DISPLAY=:1
 
-# Start Openbox session as foreground process
-exec openbox-session
+# Configure keyboard layout (Alt+Shift toggle)
+setxkbmap -layout us,ar -option grp:alt_shift_toggle &
+
+# Disable screensaver and DPMS
+xset s off -dpms 2>/dev/null || true
+
+# Initialize D-Bus session if not present
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+  eval $(dbus-launch --sh-syntax)
+  export DBUS_SESSION_BUS_ADDRESS
+fi
+
+# Ensure default panel xml exists
+if [ ! -f /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml ] && [ -f /etc/xdg/xfce4/panel/default.xml ]; then
+  mkdir -p /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml
+  cp /etc/xdg/xfce4/panel/default.xml /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+fi
+
+# Launch XFCE core components
+xfsettingsd &
+xfwm4 &
+xfce4-panel &
+thunar --daemon &
+xfdesktop &
+
+# Watchdog loop to monitor and keep XFCE components running
+while true; do
+  if ! pgrep -x "Xvnc" >/dev/null 2>&1; then
+    echo "Xvnc died, exiting..."
+    exit 1
+  fi
+  if ! pgrep -x "xfwm4" >/dev/null 2>&1; then
+    xfwm4 &
+  fi
+  if ! pgrep -x "xfce4-panel" >/dev/null 2>&1; then
+    xfce4-panel &
+  fi
+  if ! pgrep -x "xfdesktop" >/dev/null 2>&1; then
+    xfdesktop &
+  fi
+  sleep 3
+done
