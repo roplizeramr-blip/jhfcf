@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     sudo \
     ssl-cert \
+    supervisor \
+    python3 \
     openbox \
     obconf \
     tint2 \
@@ -52,6 +54,21 @@ RUN useradd -u 1000 -m -s /bin/bash -g ssl-cert kasm_user && \
     echo "kasm_user:cranl1234" | chpasswd && \
     echo "kasm_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+# Install systemctl emulation and supervisor config
+COPY systemctl.py /usr/local/bin/systemctl
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY sample-service.service /etc/systemd/system/sample-service.service
+COPY web-terminal.service /etc/systemd/system/web-terminal.service
+
+RUN chmod +x /usr/local/bin/systemctl && \
+    ln -sf /usr/local/bin/systemctl /bin/systemctl && \
+    ln -sf /usr/local/bin/systemctl /usr/bin/systemctl && \
+    ln -sf /usr/local/bin/systemctl /sbin/service && \
+    ln -sf /usr/local/bin/systemctl /usr/sbin/service && \
+    mkdir -p /etc/systemd/system/multi-user.target.wants && \
+    ln -sf /etc/systemd/system/sample-service.service /etc/systemd/system/multi-user.target.wants/sample-service.service && \
+    ln -sf /etc/systemd/system/web-terminal.service /etc/systemd/system/multi-user.target.wants/web-terminal.service
+
 # Pre-configure user directories and desktop configs
 RUN mkdir -p /home/kasm_user/Desktop \
              /home/kasm_user/.config/openbox \
@@ -73,6 +90,7 @@ RUN echo '[Settings]\ngtk-theme-name = Greybird-dark\ngtk-icon-theme-name = Papi
     echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Files (مدير الملفات)\nExec=pcmanfm\nIcon=system-file-manager\nTerminal=false' > /home/kasm_user/Desktop/Files.desktop && \
     echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Text Editor (محرر النصوص)\nExec=mousepad\nIcon=accessories-text-editor\nTerminal=false' > /home/kasm_user/Desktop/TextEditor.desktop && \
     echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Switch Language (عربي / US)\nExec=/home/kasm_user/switch-lang.sh\nIcon=preferences-desktop-keyboard\nTerminal=false' > /home/kasm_user/Desktop/SwitchLanguage.desktop && \
+    echo '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Services (إدارة الخدمات)\nComment=Systemd Services Manager\nExec=xfce4-terminal --title="Systemd Services Manager" -e "bash -c \\"systemctl list-units; echo; echo \\\\\\"=== sample-service.service ===\\\\\\"; systemctl status sample-service; echo; echo \\\\\\"Use systemctl start/stop/restart/status to manage services.\\\\\\"; exec bash\\""\nIcon=preferences-system\nTerminal=false' > /home/kasm_user/Desktop/Services.desktop && \
     echo "alias ar='setxkbmap -layout ar,us -option grp:alt_shift_toggle && echo Language: Arabic'" >> /home/kasm_user/.bashrc && \
     echo "alias en='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo Language: US English'" >> /home/kasm_user/.bashrc && \
     echo "alias us='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo Language: US English'" >> /home/kasm_user/.bashrc && \

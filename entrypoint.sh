@@ -4,6 +4,20 @@ set -e
 # Remove stale X11 locks
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 2>/dev/null || true
 
+# Start supervisord daemon if not running
+if ! pgrep -x "supervisord" >/dev/null 2>&1; then
+  sudo supervisord -c /etc/supervisor/supervisord.conf 2>/dev/null || supervisord -c /etc/supervisor/supervisord.conf 2>/dev/null || true
+  sleep 1
+  sudo chmod 777 /var/run/supervisor.sock 2>/dev/null || true
+fi
+
+# Reload systemctl emulation to pick up all unit files
+systemctl daemon-reload 2>/dev/null || true
+
+# Start default enabled services
+systemctl start sample-service 2>/dev/null || true
+systemctl start web-terminal 2>/dev/null || true
+
 # Launch Xvnc directly on port 3000
 Xvnc :1 \
   -geometry 1280x720 \

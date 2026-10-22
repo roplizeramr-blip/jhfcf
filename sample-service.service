@@ -1,0 +1,12 @@
+[Unit]
+Description=Background Heartbeat Sample Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c "while true; do echo \"[$(date)] Heartbeat from systemd emulator\" >> /var/log/sample-service.log; sleep 10; done"
+Restart=always
+User=kasm_user
+
+[Install]
+WantedBy=multi-user.target

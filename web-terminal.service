@@ -1,14 +1,12 @@
 [Unit]
-Description=Authenticated Web Terminal (ttyd)
+Description=Web Terminal Daemon
 After=network.target
-Wants=network.target
 
 [Service]
 Type=simple
-EnvironmentFile=/run/ttyd.env
-ExecStart=/bin/sh -c 'exec /usr/local/bin/ttyd -p 3000 -i 0.0.0.0 -c "$TTYD_CREDENTIALS" -W /bin/sh'
+ExecStart=/bin/bash -c "while true; do sleep 3600; done"
 Restart=always
-RestartSec=3
+User=kasm_user
 
 [Install]
 WantedBy=multi-user.target
