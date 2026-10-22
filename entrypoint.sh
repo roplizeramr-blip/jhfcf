@@ -4,13 +4,16 @@ set -e
 # Remove any stale lock files
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 2>/dev/null || true
 
+# Target user home directory
+USER_HOME="${HOME:-/home/kasm_user}"
+
 # Create config directories
-mkdir -p /home/kasm_user/Desktop
-mkdir -p /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml
-mkdir -p /home/kasm_user/.config/xfce4/terminal
+mkdir -p "$USER_HOME/Desktop"
+mkdir -p "$USER_HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
+mkdir -p "$USER_HOME/.config/xfce4/terminal"
 
 # Write XFCE config files
-cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
+cat << 'EOF' > "$USER_HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xsettings" version="1.0">
   <property name="Net" type="empty">
@@ -30,7 +33,7 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xsetting
 </channel>
 EOF
 
-cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+cat << 'EOF' > "$USER_HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfwm4" version="1.0">
   <property name="general" type="empty">
@@ -40,7 +43,7 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xm
 </channel>
 EOF
 
-cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard-layout.xml
+cat << 'EOF' > "$USER_HOME/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard-layout.xml"
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="keyboard-layout" version="1.0">
   <property name="Default" type="empty">
@@ -54,7 +57,7 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard
 </channel>
 EOF
 
-cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+cat << 'EOF' > "$USER_HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfce4-desktop" version="1.0">
   <property name="backdrop" type="empty">
@@ -75,7 +78,7 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-de
 </channel>
 EOF
 
-cat << 'EOF' > /home/kasm_user/.config/xfce4/terminal/terminalrc
+cat << 'EOF' > "$USER_HOME/.config/xfce4/terminal/terminalrc"
 [Configuration]
 FontName=Noto Sans Mono 11
 ColorBackground=#1e2227
@@ -92,7 +95,7 @@ TitleMode=TERMINAL_TITLE_PREPEND
 EOF
 
 # Create desktop language switcher script
-cat << 'EOF' > /home/kasm_user/switch-lang.sh
+cat << 'EOF' > "$USER_HOME/switch-lang.sh"
 #!/bin/bash
 current=$(setxkbmap -query 2>/dev/null | awk '/layout/{print $2}')
 if [[ "$current" == *"ar"* ]]; then
@@ -103,9 +106,9 @@ else
   notify-send -t 1500 "لوحة المفاتيح" "تم التبديل إلى العربية" 2>/dev/null || true
 fi
 EOF
-chmod +x /home/kasm_user/switch-lang.sh 2>/dev/null || true
+chmod +x "$USER_HOME/switch-lang.sh" 2>/dev/null || true
 
-cat << 'EOF' > /home/kasm_user/Desktop/switch-language.desktop
+cat << 'EOF' > "$USER_HOME/Desktop/switch-language.desktop"
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -116,10 +119,10 @@ Icon=preferences-desktop-keyboard
 Terminal=false
 StartupNotify=false
 EOF
-chmod +x /home/kasm_user/Desktop/switch-language.desktop 2>/dev/null || true
+chmod +x "$USER_HOME/Desktop/switch-language.desktop" 2>/dev/null || true
 
 # Add convenient aliases in .bashrc
-cat << 'EOF' >> /home/kasm_user/.bashrc
+cat << 'EOF' >> "$USER_HOME/.bashrc"
 alias ar='setxkbmap -layout ar,us -option grp:alt_shift_toggle && echo "لوحة المفاتيح: عربي (Arabic)"'
 alias en='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo "Keyboard: US English"'
 alias us='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo "Keyboard: US English"'

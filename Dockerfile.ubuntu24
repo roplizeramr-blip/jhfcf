@@ -7,6 +7,9 @@ ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 
+RUN touch /var/mail/ubuntu 2>/dev/null || true && \
+    userdel -r ubuntu 2>/dev/null || true
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
@@ -26,7 +29,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     greybird-gtk-theme \
     papirus-icon-theme \
     fonts-hosny-amiri \
-    fonts-kacst \
     fonts-kacst-one \
     fonts-noto-core \
     fonts-dejavu-core \
@@ -49,7 +51,7 @@ RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
 
 RUN echo 'XKBMODEL="pc105"\nXKBLAYOUT="us,ar"\nXKBVARIANT=","\nXKBOPTIONS="grp:alt_shift_toggle"' > /etc/default/keyboard
 
-RUN useradd -m -s /bin/bash -g ssl-cert kasm_user && \
+RUN useradd -u 1000 -m -s /bin/bash -g ssl-cert kasm_user && \
     echo "kasm_user:cranl1234" | chpasswd && \
     echo "kasm_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
