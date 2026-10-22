@@ -1,17 +1,15 @@
 #!/bin/bash
 set -e
 
-# Clean up any leftover X11 sockets or locks
+# Remove any stale lock files
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 2>/dev/null || true
-mkdir -p /tmp/.X11-unix
-chmod 1777 /tmp/.X11-unix
 
-# Create user directories
+# Create config directories
 mkdir -p /home/kasm_user/Desktop
 mkdir -p /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml
 mkdir -p /home/kasm_user/.config/xfce4/terminal
 
-# Configure XFCE theme, icons, and fonts
+# Write XFCE config files
 cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xsettings" version="1.0">
@@ -32,7 +30,6 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xsetting
 </channel>
 EOF
 
-# Configure Window Manager Theme (Sleek dark titlebars)
 cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfwm4" version="1.0">
@@ -43,7 +40,6 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xm
 </channel>
 EOF
 
-# Configure Keyboard Layouts: English (US) and Arabic (AR) with Alt+Shift toggle
 cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard-layout.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="keyboard-layout" version="1.0">
@@ -58,7 +54,6 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard
 </channel>
 EOF
 
-# Configure Dark Charcoal Wallpaper for Desktop
 cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfce4-desktop" version="1.0">
@@ -80,7 +75,6 @@ cat << 'EOF' > /home/kasm_user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-de
 </channel>
 EOF
 
-# Configure Modern Dark Terminal (OneDark palette, Noto Sans Mono)
 cat << 'EOF' > /home/kasm_user/.config/xfce4/terminal/terminalrc
 [Configuration]
 FontName=Noto Sans Mono 11
@@ -97,19 +91,19 @@ MiscScrollbarDefault=TERMINAL_SCROLLBAR_RIGHT
 TitleMode=TERMINAL_TITLE_PREPEND
 EOF
 
-# Create Language Switcher Script and Desktop Icon
+# Create desktop language switcher script
 cat << 'EOF' > /home/kasm_user/switch-lang.sh
 #!/bin/bash
-current=$(setxkbmap -query | awk '/layout/{print $2}')
+current=$(setxkbmap -query 2>/dev/null | awk '/layout/{print $2}')
 if [[ "$current" == *"ar"* ]]; then
-  setxkbmap -layout us,ar -option grp:alt_shift_toggle
+  setxkbmap -layout us,ar -option grp:alt_shift_toggle 2>/dev/null || true
   notify-send -t 1500 "Keyboard Layout" "Switched to English (US)" 2>/dev/null || true
 else
-  setxkbmap -layout ar,us -option grp:alt_shift_toggle
+  setxkbmap -layout ar,us -option grp:alt_shift_toggle 2>/dev/null || true
   notify-send -t 1500 "لوحة المفاتيح" "تم التبديل إلى العربية" 2>/dev/null || true
 fi
 EOF
-chmod +x /home/kasm_user/switch-lang.sh
+chmod +x /home/kasm_user/switch-lang.sh 2>/dev/null || true
 
 cat << 'EOF' > /home/kasm_user/Desktop/switch-language.desktop
 [Desktop Entry]
@@ -122,47 +116,17 @@ Icon=preferences-desktop-keyboard
 Terminal=false
 StartupNotify=false
 EOF
-chmod +x /home/kasm_user/Desktop/switch-language.desktop
+chmod +x /home/kasm_user/Desktop/switch-language.desktop 2>/dev/null || true
 
-# Add terminal shortcuts and aliases to .bashrc
+# Add convenient aliases in .bashrc
 cat << 'EOF' >> /home/kasm_user/.bashrc
 alias ar='setxkbmap -layout ar,us -option grp:alt_shift_toggle && echo "لوحة المفاتيح: عربي (Arabic)"'
 alias en='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo "Keyboard: US English"'
 alias us='setxkbmap -layout us,ar -option grp:alt_shift_toggle && echo "Keyboard: US English"'
 EOF
 
-# Start D-Bus session bus
-eval $(dbus-launch --sh-syntax)
-export DBUS_SESSION_BUS_ADDRESS
-
-# Background thread to launch XFCE desktop components once Xvnc is listening
-(
-  # Wait for Xvnc :1 display to become ready
-  for i in $(seq 1 40); do
-    if xset q -display :1 >/dev/null 2>&1; then
-      break
-    fi
-    sleep 0.5
-  done
-
-  export DISPLAY=:1
-
-  # Apply keyboard layout (US + Arabic with Alt+Shift toggle)
-  setxkbmap -display :1 -layout us,ar -option grp:alt_shift_toggle 2>/dev/null || true
-
-  # Launch XFCE core components
-  xfsettingsd --replace &
-  xfwm4 &
-  xfce4-panel &
-  xfdesktop &
-
-  # Launch modern terminal
-  sleep 2
-  xfce4-terminal --geometry=95x26+120+80 &
-) &
-
-# Run Xvnc in foreground as PID 1 - Keeps container permanently running!
-exec Xvnc :1 \
+# Start KasmVNC directly in background
+Xvnc :1 \
   -geometry 1280x720 \
   -depth 24 \
   -interface 0.0.0.0 \
@@ -170,4 +134,29 @@ exec Xvnc :1 \
   -httpd /usr/share/kasmvnc/www \
   -sslOnly 0 \
   -SecurityTypes None \
-  -disableBasicAuth
+  -disableBasicAuth &
+
+XVNC_PID=$!
+
+# Wait for Xvnc display to become available
+sleep 2
+export DISPLAY=:1
+
+# Initialize D-Bus session
+eval $(dbus-launch --sh-syntax 2>/dev/null || true)
+export DBUS_SESSION_BUS_ADDRESS
+
+# Configure keyboard layouts
+setxkbmap -display :1 -layout us,ar -option grp:alt_shift_toggle 2>/dev/null || true
+
+# Launch XFCE desktop components
+xfsettingsd --replace &
+xfwm4 &
+xfce4-panel &
+xfdesktop &
+
+# Launch modern terminal
+(sleep 2 && xfce4-terminal --geometry=95x26+120+80) &
+
+# Keep container alive by waiting for Xvnc
+wait $XVNC_PID
